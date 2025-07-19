@@ -1,13 +1,14 @@
 import { Booking } from '@/types';
-import { Calendar, User, Clock, Eye, Mail, Phone } from 'lucide-react';
+import { Calendar, User, Clock, Eye, Mail, Phone, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface BookingCardProps {
   booking: Booking;
   onViewDetails: () => void;
+  onUpdate: () => void;
 }
 
-export default function BookingCard({ booking, onViewDetails }: BookingCardProps) {
+export default function BookingCard({ booking, onViewDetails, onUpdate }: BookingCardProps) {
   return (
     <div className="card hover:shadow-md transition-shadow duration-200">
       <div className="flex justify-between items-start mb-4">
@@ -59,13 +60,22 @@ export default function BookingCard({ booking, onViewDetails }: BookingCardProps
         </div>
       </div>
 
+      <div className="flex space-x-2">
       <button
         onClick={onViewDetails}
-        className="w-full btn-secondary flex items-center justify-center space-x-1"
+          className="btn-secondary flex-1 flex items-center justify-center space-x-1 text-sm"
       >
         <Eye className="w-4 h-4" />
-        <span>View Details</span>
+          <span>Details</span>
+        </button>
+        
+        <button
+          onClick={onUpdate}
+          className="btn-secondary flex items-center justify-center space-x-1 text-sm px-3"
+        >
+          <Edit className="w-4 h-4" />
       </button>
+      </div>
     </div>
   );
 } 

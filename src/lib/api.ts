@@ -236,6 +236,8 @@ class ApiClient {
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
     
+    // For analytics, we need to get all data, so we'll make multiple calls if needed
+    // or handle the pagination properly
     const response = await this.client.get(`/analytics/dashboard?${params.toString()}`);
     return response.data;
   }

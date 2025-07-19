@@ -10,11 +10,13 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import ClassCard from '../cards/ClassCard';
 import ClassDetailsModal from '../modals/ClassDetailsModal';
 import ClassStatisticsModal from '../modals/ClassStatisticsModal';
+import UpdateClassModal from '../modals/UpdateClassModal';
 import DateRangeFilter from '../filters/DateRangeFilter';
 
 export default function ClassesSection() {
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [selectedClassForStats, setSelectedClassForStats] = useState<Class | null>(null);
+  const [selectedClassForUpdate, setSelectedClassForUpdate] = useState<Class | null>(null);
   const [dateFilter, setDateFilter] = useState<{ startDate?: string; endDate?: string }>({});
 
   const {
@@ -106,7 +108,7 @@ export default function ClassesSection() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Active Classes</p>
               <p className="text-2xl font-bold text-gray-900">
-                {classes.filter(c => new Date(c.endDate) >= new Date()).length}
+                {classes.filter(c => new Date(c.classDate) >= new Date()).length}
               </p>
             </div>
           </div>
@@ -146,6 +148,7 @@ export default function ClassesSection() {
               classItem={classItem}
               onViewDetails={() => setSelectedClass(classItem)}
               onViewStatistics={() => setSelectedClassForStats(classItem)}
+              onUpdate={() => setSelectedClassForUpdate(classItem)}
             />
           ))}
         </div>
@@ -178,6 +181,14 @@ export default function ClassesSection() {
           classItem={selectedClass}
           isOpen={!!selectedClass}
           onClose={() => setSelectedClass(null)}
+        />
+      )}
+
+      {selectedClassForUpdate && (
+        <UpdateClassModal
+          classData={selectedClassForUpdate}
+          isOpen={!!selectedClassForUpdate}
+          onClose={() => setSelectedClassForUpdate(null)}
         />
       )}
 

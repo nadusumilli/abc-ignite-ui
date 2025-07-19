@@ -28,7 +28,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
             <User className="w-5 h-5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-600">Member</p>
-              <p className="font-medium">{booking.member_name}</p>
+              <p className="font-medium">{booking.memberName}</p>
             </div>
           </div>
           
@@ -36,7 +36,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
             <BookOpen className="w-5 h-5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-600">Class</p>
-              <p className="font-medium">{booking.class_name}</p>
+              <p className="font-medium">{booking.class.name}</p>
             </div>
           </div>
           
@@ -44,7 +44,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
             <Calendar className="w-5 h-5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-600">Participation Date</p>
-              <p className="font-medium">{format(new Date(booking.participation_date), 'MMM dd, yyyy')}</p>
+              <p className="font-medium">{booking.participationDate ? format(new Date(booking.participationDate), 'MMM dd, yyyy') : 'N/A'}</p>
             </div>
           </div>
           
@@ -52,7 +52,7 @@ export default function BookingDetailsModal({ booking, isOpen, onClose }: Bookin
             <Clock className="w-5 h-5 text-gray-500" />
             <div>
               <p className="text-sm text-gray-600">Class Time</p>
-              <p className="font-medium">{booking.class_start_time}</p>
+              <p className="font-medium">{booking.classStartTime}</p>
             </div>
           </div>
         </div>

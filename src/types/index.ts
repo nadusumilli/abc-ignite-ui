@@ -3,8 +3,10 @@ export interface Class {
   name: string;
   description?: string;
   instructorId: string;
+  instructorName: string;
   classType: string;
-  classDate: string;
+  startDate: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   durationMinutes: number;
@@ -155,8 +157,10 @@ export interface CreateClassRequest {
   name: string;
   description?: string;
   instructorId: string;
+  instructorName: string;
   classType: string;
-  classDate: string;
+  startDate: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   durationMinutes: number;

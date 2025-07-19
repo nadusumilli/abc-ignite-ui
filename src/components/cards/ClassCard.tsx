@@ -1,15 +1,16 @@
 import { Class } from '@/types';
-import { Calendar, Clock, Users, Eye, BarChart3, User, DollarSign } from 'lucide-react';
+import { Calendar, Clock, Users, Eye, BarChart3, User, DollarSign, Edit } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ClassCardProps {
   classItem: Class;
   onViewDetails: () => void;
   onViewStatistics: () => void;
+  onUpdate: () => void;
 }
 
-export default function ClassCard({ classItem, onViewDetails, onViewStatistics }: ClassCardProps) {
-  const isActive = new Date(classItem.endDate) >= new Date();
+export default function ClassCard({ classItem, onViewDetails, onViewStatistics, onUpdate }: ClassCardProps) {
+  const isActive = new Date(classItem.startDate) >= new Date();
   
   return (
     <div className="card hover:shadow-md transition-shadow duration-200">
@@ -17,7 +18,7 @@ export default function ClassCard({ classItem, onViewDetails, onViewStatistics }
         <div>
           <h3 className="text-lg font-semibold text-gray-900">{classItem.name}</h3>
           <p className="text-sm text-gray-600">
-            {format(new Date(classItem.startDate), 'MMM dd, yyyy')} - {format(new Date(classItem.endDate), 'MMM dd, yyyy')}
+            {classItem.startDate ? format(new Date(classItem.startDate), 'MMM dd, yyyy') : 'N/A'}
           </p>
         </div>
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -37,7 +38,7 @@ export default function ClassCard({ classItem, onViewDetails, onViewStatistics }
         
         <div className="flex items-center text-sm text-gray-600">
           <User className="w-4 h-4 mr-2" />
-          <span>{classItem.instructorName}</span>
+          <span>{classItem.instructorId}</span>
         </div>
         
         <div className="flex items-center text-sm text-gray-600">
@@ -65,6 +66,13 @@ export default function ClassCard({ classItem, onViewDetails, onViewStatistics }
         >
           <Eye className="w-4 h-4" />
           <span>Details</span>
+        </button>
+        
+        <button
+          onClick={onUpdate}
+          className="btn-secondary flex items-center justify-center space-x-1 text-sm px-3"
+        >
+          <Edit className="w-4 h-4" />
         </button>
         
         <button

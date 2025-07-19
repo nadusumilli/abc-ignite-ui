@@ -29,22 +29,22 @@ export default function ClassDetailsModal({ classItem, isOpen, onClose }: ClassD
           <div className="flex items-center space-x-3">
             <Calendar className="w-5 h-5 text-gray-500" />
             <span>
-              {format(new Date(classItem.start_date), 'MMM dd, yyyy')} - {format(new Date(classItem.end_date), 'MMM dd, yyyy')}
+              {classItem?.startDate ? format(new Date(classItem.startDate), 'MMM dd, yyyy') : 'N/A'} - {classItem.endDate ? format(new Date(classItem.endDate), 'MMM dd, yyyy') : 'N/A'}
             </span>
           </div>
           <div className="flex items-center space-x-3">
             <Clock className="w-5 h-5 text-gray-500" />
             <span>
-              {classItem.start_time} ({classItem.duration} min)
+              {classItem.startTime} ({classItem.durationMinutes} min)
             </span>
           </div>
           <div className="flex items-center space-x-3">
             <Users className="w-5 h-5 text-gray-500" />
-            <span>Capacity: {classItem.capacity}</span>
+            <span>Capacity: {classItem.maxCapacity}</span>
           </div>
           <div className="flex items-center space-x-3">
             <span className="text-gray-500">Created:</span>
-            <span>{format(new Date(classItem.created_at), 'MMM dd, yyyy')}</span>
+            <span>{format(new Date(classItem.createdAt), 'MMM dd, yyyy')}</span>
           </div>
         </div>
       </div>

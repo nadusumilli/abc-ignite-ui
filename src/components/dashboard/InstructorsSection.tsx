@@ -6,6 +6,7 @@ import { Plus, Search, Edit, Trash2, User, Mail, Phone, BookOpen, AlertCircle } 
 import { apiClient } from '@/lib/api';
 import { Instructor } from '@/types';
 import toast from 'react-hot-toast';
+import UpdateInstructorModal from '../modals/UpdateInstructorModal';
 
 export default function InstructorsSection() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -184,24 +185,16 @@ export default function InstructorsSection() {
         </div>
       )}
 
-      {/* Edit Modal would go here - for now just a placeholder */}
+      {/* Update Instructor Modal */}
       {isEditModalOpen && selectedInstructor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-lg font-semibold mb-4">Edit Instructor</h3>
-            <p className="text-gray-600 mb-4">
-              Edit functionality will be implemented here.
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="btn-secondary flex-1"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
+        <UpdateInstructorModal
+          instructorData={selectedInstructor}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedInstructor(null);
+          }}
+        />
       )}
     </div>
   );

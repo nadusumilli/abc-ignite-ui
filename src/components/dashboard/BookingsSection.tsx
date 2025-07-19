@@ -10,10 +10,12 @@ import LoadingSpinner from '../ui/LoadingSpinner';
 import BookingCard from '../cards/BookingCard';
 import BookingDetailsModal from '../modals/BookingDetailsModal';
 import BookingStatisticsModal from '../modals/BookingStatisticsModal';
+import UpdateBookingModal from '../modals/UpdateBookingModal';
 import SearchFilters from '../filters/SearchFilters';
 
 export default function BookingsSection() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedBookingForUpdate, setSelectedBookingForUpdate] = useState<Booking | null>(null);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
   const [filters, setFilters] = useState<{
     memberName?: string;
@@ -160,6 +162,7 @@ export default function BookingsSection() {
               key={booking.id}
               booking={booking}
               onViewDetails={() => setSelectedBooking(booking)}
+              onUpdate={() => setSelectedBookingForUpdate(booking)}
             />
           ))}
         </div>
@@ -192,6 +195,14 @@ export default function BookingsSection() {
           booking={selectedBooking}
           isOpen={!!selectedBooking}
           onClose={() => setSelectedBooking(null)}
+        />
+      )}
+
+      {selectedBookingForUpdate && (
+        <UpdateBookingModal
+          bookingData={selectedBookingForUpdate}
+          isOpen={!!selectedBookingForUpdate}
+          onClose={() => setSelectedBookingForUpdate(null)}
         />
       )}
 

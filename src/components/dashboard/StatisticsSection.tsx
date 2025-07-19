@@ -1,247 +1,413 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { BarChart3, TrendingUp, Users, Calendar, Target, Activity, Clock, PieChart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import Badge from '@/components/ui/Badge';
+import Progress from '@/components/ui/Progress';
+import { Alert, AlertDescription } from '@/components/ui/Alert';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Users, 
+  Calendar, 
+  DollarSign, 
+  Target,
+  AlertTriangle,
+  CheckCircle,
+  Clock
+} from 'lucide-react';
 import { apiClient } from '@/lib/api';
-import { format, subDays } from 'date-fns';
-import LoadingSpinner from '../ui/LoadingSpinner';
-import StatisticsCard from '../cards/StatisticsCard';
-import BookingChart from '../charts/BookingChart';
-import DateRangeFilter from '../filters/DateRangeFilter';
+
+interface DashboardStatistics {
+  overview: {
+    totalClasses: number;
+    totalBookings: number;
+    totalMembers: number;
+    totalInstructors: number;
+    activeClasses: number;
+    pendingBookings: number;
+    todayBookings: number;
+    thisWeekRevenue: number;
+  };
+  performance: {
+    attendanceRate: number;
+    capacityUtilization: number;
+    cancellationRate: number;
+    noShowRate: number;
+    averageBookingsPerMember: number;
+    averageRevenuePerClass: number;
+  };
+  trends: {
+    weeklyBookings: Array<{ week: string; count: number; revenue: number }>;
+    monthlyRevenue: Array<{ month: string; revenue: number; bookings: number }>;
+    popularClasses: Array<{ name: string; bookings: number; revenue: number }>;
+    topInstructors: Array<{ name: string; classes: number; attendance: number }>;
+  };
+  alerts: {
+    lowAttendanceClasses: Array<{ classId: string; className: string; attendanceRate: number }>;
+    highCancellationClasses: Array<{ classId: string; className: string; cancellationRate: number }>;
+    upcomingFullClasses: Array<{ classId: string; className: string; capacity: number; bookings: number }>;
+  };
+}
 
 export default function StatisticsSection() {
-  const [dateFilter, setDateFilter] = useState<{ startDate?: string; endDate?: string }>({
-    startDate: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-    endDate: format(new Date(), 'yyyy-MM-dd'),
-  });
+  const [stats, setStats] = useState<DashboardStatistics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const {
-    data: analyticsResponse,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['analytics-dashboard', dateFilter],
-    queryFn: () => apiClient.getAnalyticsDashboard(dateFilter),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
 
-  const analytics = analyticsResponse?.data || {
-    classPerformance: {
-      topClasses: [],
-      averageMetrics: {
-        fillRate: 0,
-        attendanceRate: 0,
-        noShowRate: 0,
-        cancellationRate: 0
-      },
-      classTypeBreakdown: [],
-      period: { startDate: 'all', endDate: 'all' }
-    },
-    memberEngagement: {
-      activeMembers: [],
-      retention: {
-        totalMembers: 0,
-        activeMembers: 0,
-        recentMembers: 0,
-        veryRecentMembers: 0,
-        newMembers90d: 0,
-        retainedMembers30d: 0,
-        retentionRate30d: 0,
-        engagementRate30d: 0
-      },
-      membershipBreakdown: [],
-      period: { startDate: 'all', endDate: 'all' }
-    },
-    timeBasedTrends: {
-      weeklyTrends: [],
-      monthlyTrends: [],
-      peakHours: [],
-      dayOfWeekDemand: [],
-      period: { startDate: 'all', endDate: 'all' }
-    },
-    operationalMetrics: {
-      capacityMetrics: {
-        totalClasses: 0,
-        totalCapacity: 0,
-        upcomingClasses: 0,
-        pastClasses: 0,
-        activeClasses: 0,
-        cancelledClasses: 0,
-        completedClasses: 0,
-        totalBookings: 0,
-        overallCapacityUtilization: 0
-      },
-      fillRateDistribution: [],
-      period: { startDate: 'all', endDate: 'all' }
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiClient.getAnalyticsDashboard();
+      
+      if (response.success && response.data) {
+        setStats(response.data);
+      } else {
+        throw new Error(response.message || 'Invalid response format');
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard stats:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load statistics');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner />
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(8)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-32"></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <div className="text-red-600 text-lg font-medium mb-2">
-          Failed to load statistics
-        </div>
-        <div className="text-gray-600 mb-4">
-          {error instanceof Error ? error.message : 'An unexpected error occurred'}
-        </div>
-        <button
-          onClick={() => refetch()}
-          className="btn-primary"
-        >
-          Try Again
-        </button>
-      </div>
+      <Alert variant="destructive">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          {error}
+        </AlertDescription>
+      </Alert>
     );
   }
 
+  if (!stats) {
+    return (
+      <Alert variant="info">
+        <AlertTriangle className="h-4 w-4" />
+        <AlertDescription>
+          No statistics data available
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  const getPerformanceColor = (value: number, threshold: number = 70) => {
+    if (value >= threshold) return 'text-green-600';
+    if (value >= threshold * 0.8) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getPerformanceIcon = (value: number, threshold: number = 70) => {
+    if (value >= threshold) return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (value >= threshold * 0.8) return <TrendingUp className="h-4 w-4 text-yellow-600" />;
+    return <TrendingDown className="h-4 w-4 text-red-600" />;
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Statistics</h2>
-          <p className="text-gray-600">
-            Comprehensive analytics and insights
-          </p>
-        </div>
-        
-        <DateRangeFilter
-          startDate={dateFilter.startDate}
-          endDate={dateFilter.endDate}
-          onDateChange={setDateFilter}
-        />
+      {/* Overview Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.overview.totalClasses}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.overview.activeClasses} active
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.overview.totalBookings}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.overview.pendingBookings} pending
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.overview.totalMembers}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.overview.totalInstructors} instructors
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Weekly Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${stats.overview.thisWeekRevenue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.overview.todayBookings} bookings today
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatisticsCard
-          title="Total Classes"
-          value={analytics.operationalMetrics.capacityMetrics.totalClasses}
-          icon={Calendar}
-          color="blue"
-        />
-        
-        <StatisticsCard
-          title="Total Bookings"
-          value={analytics.operationalMetrics.capacityMetrics.totalBookings}
-          icon={Users}
-          color="green"
-        />
-        
-        <StatisticsCard
-          title="Attendance Rate"
-          value={`${(analytics.classPerformance.averageMetrics.attendanceRate * 100).toFixed(1)}%`}
-          icon={TrendingUp}
-          color="purple"
-        />
-        
-        <StatisticsCard
-          title="Capacity Utilization"
-          value={`${(analytics.operationalMetrics.capacityMetrics.overallCapacityUtilization * 100).toFixed(1)}%`}
-          icon={Target}
-          color="orange"
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Booking Trends Chart */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Booking Trends</h3>
-            <p className="card-subtitle">
-              Daily booking activity over time
-            </p>
-          </div>
-          <div className="h-80">
-            <BookingChart data={[]} />
-          </div>
-        </div>
-
-        {/* Member Activity Chart */}
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Member Engagement</h3>
-            <p className="card-subtitle">
-              Active members and retention metrics
-            </p>
-          </div>
-          <div className="h-80 flex items-center justify-center text-gray-500">
-            <div className="text-center">
-              <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>Active Members: {analytics.memberEngagement.retention.activeMembers}</p>
-              <p>Retention Rate: {(analytics.memberEngagement.retention.retentionRate30d * 100).toFixed(1)}%</p>
+      {/* Performance Metrics */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Attendance Rate</CardTitle>
+            {getPerformanceIcon(stats.performance.attendanceRate)}
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getPerformanceColor(stats.performance.attendanceRate)}`}>
+              {stats.performance.attendanceRate?.toFixed(1)}%
             </div>
-          </div>
-        </div>
+            <Progress value={stats.performance.attendanceRate} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Target: 70%
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Capacity Utilization</CardTitle>
+            {getPerformanceIcon(stats.performance.capacityUtilization)}
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${getPerformanceColor(stats.performance.capacityUtilization)}`}>
+              {stats.performance.capacityUtilization?.toFixed(1)}%
+            </div>
+            <Progress value={stats.performance.capacityUtilization} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Optimal: 80-90%
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cancellation Rate</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.performance.cancellationRate?.toFixed(1)}%
+            </div>
+            <Progress value={stats.performance.cancellationRate} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Target: &lt;15%
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">No-Show Rate</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.performance.noShowRate?.toFixed(1)}%
+            </div>
+            <Progress value={stats.performance.noShowRate} className="mt-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Target: &lt;10%
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Bookings/Member</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.performance.averageBookingsPerMember?.toFixed(1)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Member engagement
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Avg Revenue/Class</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${stats.performance.averageRevenuePerClass?.toFixed(0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Revenue efficiency
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Additional Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Peak Hours</h3>
-            <p className="card-subtitle">
-              Most popular class times
-            </p>
-          </div>
-          <div className="space-y-4">
-            {analytics.timeBasedTrends.peakHours.slice(0, 3).map((hour, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="text-gray-600">
-                  {hour.hour}:00 - {hour.hour + 1}:00
-                </span>
-                <span className="font-semibold">
-                  {hour.bookingCount} bookings
-                </span>
-              </div>
-            ))}
-            {analytics.timeBasedTrends.peakHours.length === 0 && (
-              <div className="text-center text-gray-500 py-4">
-                <Clock className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                <p>No peak hours data available</p>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Alerts Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {/* Low Attendance Alerts */}
+        {stats.alerts.lowAttendanceClasses.length > 0 && (
+          <Card className="border-red-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+                Low Attendance Classes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {stats.alerts.lowAttendanceClasses.slice(0, 3).map((classItem) => (
+                <div key={classItem.classId} className="flex justify-between items-center text-sm">
+                  <span className="truncate">{classItem.className}</span>
+                  <Badge variant="destructive" className="text-xs">
+                    {classItem.attendanceRate?.toFixed(1)}%
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Top Classes</h3>
-            <p className="card-subtitle">
-              Most booked classes
-            </p>
-          </div>
-          <div className="space-y-4">
-            {analytics.classPerformance.topClasses.slice(0, 4).map((classItem, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="text-gray-600 truncate">
-                  {classItem.className}
-                </span>
-                <span className="font-semibold">
-                  {classItem.bookingCount} bookings
-                </span>
-              </div>
-            ))}
-            {analytics.classPerformance.topClasses.length === 0 && (
-              <div className="text-center text-gray-500 py-4">
-                <PieChart className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                <p>No class data available</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* High Cancellation Alerts */}
+        {stats.alerts.highCancellationClasses.length > 0 && (
+          <Card className="border-orange-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                High Cancellation Classes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {stats.alerts.highCancellationClasses.slice(0, 3).map((classItem) => (
+                <div key={classItem.classId} className="flex justify-between items-center text-sm">
+                  <span className="truncate">{classItem.className}</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {classItem.cancellationRate?.toFixed(1)}%
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Upcoming Full Classes */}
+        {stats.alerts.upcomingFullClasses.length > 0 && (
+          <Card className="border-green-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                Upcoming Full Classes
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {stats.alerts.upcomingFullClasses.slice(0, 3).map((classItem) => (
+                <div key={classItem.classId} className="flex justify-between items-center text-sm">
+                  <span className="truncate">{classItem.className}</span>
+                  <Badge variant="default" className="text-xs">
+                    {classItem.bookings}/{classItem.capacity}
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Popular Classes & Top Instructors */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Popular Classes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats.trends.popularClasses.slice(0, 5).map((classItem, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <span className="font-medium">{classItem.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{classItem.bookings} bookings</div>
+                    <div className="text-sm text-muted-foreground">
+                      ${classItem.revenue.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Top Instructors</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats.trends.topInstructors.slice(0, 5).map((instructor, index) => (
+                <div key={index} className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                      {index + 1}
+                    </div>
+                    <span className="font-medium">{instructor.name}</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{instructor.classes} classes</div>
+                    <div className="text-sm text-muted-foreground">
+                      {instructor.attendance} attendees
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
